@@ -1,0 +1,701 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enforcement Scorecard — Framework v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#10161F; --paper:#F4F6F9; --surface:#FFFFFF; --rule:#DCE3EB;
+  --slate:#5D6B7C; --faint:#8C99A8;
+  --signal:#17509B; --signal-soft:#E7EEF7;
+  --good:#0D6E4A; --good-soft:#E4F1EA;
+  --watch:#A66A05; --watch-soft:#FBF0DC;
+  --risk:#A82A19; --risk-soft:#FAE7E4;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:3px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+.shell{max-width:1280px;margin:0 auto;padding:28px 24px 72px}
+
+/* ---------- eyebrow + header ---------- */
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--signal)}
+.masthead{display:flex;flex-wrap:wrap;align-items:flex-end;gap:20px;justify-content:space-between;
+  padding-bottom:18px;border-bottom:2px solid var(--ink)}
+.masthead h1{margin:6px 0 0;font-size:29px;font-weight:700;letter-spacing:-.022em;line-height:1.1}
+.masthead .sub{margin:7px 0 0;color:var(--slate);font-size:13px;max-width:56ch}
+.badge{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--watch);
+  border-radius:var(--r);background:var(--watch-soft);color:var(--watch);
+  font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.badge i{width:6px;height:6px;border-radius:50%;background:var(--watch);display:block}
+
+/* ---------- controls ---------- */
+.controls{display:flex;flex-wrap:wrap;gap:22px;padding:16px 0 0;border-bottom:1px solid var(--rule);padding-bottom:16px}
+.ctl{display:flex;flex-direction:column;gap:5px}
+.ctl label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.ctl select{font-family:var(--sans);font-size:13.5px;font-weight:500;color:var(--ink);background:var(--surface);
+  border:1px solid var(--rule);border-radius:var(--r);padding:7px 30px 7px 10px;min-width:172px;
+  appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%235D6B7C'/></svg>");
+  background-repeat:no-repeat;background-position:right 10px center;cursor:pointer}
+.ctl select:focus-visible{outline:2px solid var(--signal);outline-offset:1px}
+
+/* ---------- section titles ---------- */
+.sect{margin:34px 0 14px}
+.sect h2{margin:5px 0 0;font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.sect p{margin:4px 0 0;color:var(--slate);font-size:12.5px;max-width:74ch}
+
+/* ---------- KPI tiles ---------- */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.kpi{background:var(--surface);padding:15px 15px 14px;min-width:0;opacity:0;transform:translateY(7px);
+  animation:rise .5s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.kpi .k-label{font-size:9.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);
+  display:flex;align-items:center;gap:5px}
+.kpi .k-val{font-family:var(--mono);font-size:26px;font-weight:500;letter-spacing:-.045em;margin-top:9px;
+  line-height:1;font-variant-numeric:tabular-nums}
+.kpi .k-val .unit{font-size:15px;letter-spacing:-.02em;color:var(--slate)}
+.kpi .k-foot{margin-top:8px;font-size:11.5px;color:var(--slate);display:flex;align-items:baseline;gap:6px}
+.chip{font-family:var(--mono);font-size:10.5px;font-weight:500;padding:1.5px 5px;border-radius:2px;white-space:nowrap}
+.chip.up{background:var(--good-soft);color:var(--good)}
+.chip.dn{background:var(--risk-soft);color:var(--risk)}
+.chip.flat{background:var(--paper);color:var(--slate)}
+.src-dot{width:5px;height:5px;border-radius:50%;background:var(--faint);flex:0 0 auto}
+.src-dot.model{background:var(--signal)}
+
+/* ---------- signature: notice ladder ---------- */
+.ladder{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r);padding:20px 22px 18px}
+.rung{display:grid;grid-template-columns:26px 128px 1fr 84px;align-items:center;gap:14px;padding:7px 0}
+.rung + .rung{border-top:1px dashed var(--rule)}
+.rung .n{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--signal);
+  border:1px solid var(--signal-soft);background:var(--signal-soft);border-radius:2px;text-align:center;padding:2px 0}
+.rung .nm{font-size:12.5px;font-weight:500}
+.rung .nm small{display:block;color:var(--faint);font-size:10.5px;font-weight:400;letter-spacing:.02em}
+.track{height:15px;background:var(--paper);border-radius:2px;overflow:hidden;position:relative}
+.fill{height:100%;width:0;background:var(--signal);border-radius:2px;
+  transition:width 1.05s cubic-bezier(.2,.75,.25,1)}
+.rung:nth-child(2) .fill{opacity:1}
+.rung:nth-child(3) .fill{opacity:.82}
+.rung:nth-child(4) .fill{opacity:.64}
+.rung:nth-child(5) .fill{opacity:.46}
+.rung .amt{font-family:var(--mono);font-size:13.5px;font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+.rung .amt small{color:var(--faint);font-size:10.5px;display:block;font-weight:400}
+.ladder-foot{margin-top:14px;padding-top:13px;border-top:1px solid var(--rule);
+  display:flex;flex-wrap:wrap;gap:26px}
+.lf{min-width:0}
+.lf .t{font-size:9.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--faint)}
+.lf .v{font-family:var(--mono);font-size:16px;font-weight:500;margin-top:4px;font-variant-numeric:tabular-nums}
+.lf .v.good{color:var(--good)} .lf .v.watch{color:var(--watch)} .lf .v.risk{color:var(--risk)}
+
+/* ---------- gauges ---------- */
+.gauges{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.gauge{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r);padding:14px 15px}
+.gauge .g-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.gauge .g-name{font-size:12px;font-weight:500}
+.gauge .g-val{font-family:var(--mono);font-size:17px;font-weight:500;font-variant-numeric:tabular-nums}
+.gauge .g-bar{height:5px;background:var(--paper);border-radius:3px;margin-top:11px;overflow:hidden}
+.gauge .g-bar span{display:block;height:100%;width:0;border-radius:3px;transition:width 1s cubic-bezier(.2,.75,.25,1)}
+.gauge .g-note{margin-top:8px;font-size:11px;color:var(--slate)}
+.g-good .g-val{color:var(--good)} .g-good .g-bar span{background:var(--good)}
+.g-watch .g-val{color:var(--watch)} .g-watch .g-bar span{background:var(--watch)}
+.g-risk .g-val{color:var(--risk)} .g-risk .g-bar span{background:var(--risk)}
+
+/* ---------- view switch ---------- */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--rule);margin-top:34px}
+.tab{appearance:none;background:none;border:none;border-bottom:2px solid transparent;
+  font-family:var(--sans);font-size:13px;font-weight:600;color:var(--slate);
+  padding:10px 16px;cursor:pointer;letter-spacing:-.005em}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--signal);border-bottom-color:var(--signal)}
+.tab:focus-visible{outline:2px solid var(--signal);outline-offset:-2px}
+.panel{display:none;animation:fade .32s ease both}
+.panel.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- tables ---------- */
+.tw{background:var(--surface);border:1px solid var(--rule);border-top:none;
+  border-radius:0 0 var(--r) var(--r);overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:840px}
+thead th{position:sticky;top:0;background:var(--surface);text-align:left;
+  font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  padding:12px 12px 9px;border-bottom:1px solid var(--rule);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--signal)}
+thead th.num{text-align:right}
+thead th .ar{opacity:.35;font-size:8px;margin-left:3px}
+thead th[data-dir] .ar{opacity:1;color:var(--signal)}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#FAFCFE}
+td.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500}
+td.name{font-weight:500;white-space:nowrap;max-width:250px;overflow:hidden;text-overflow:ellipsis}
+td.name small{display:block;color:var(--faint);font-weight:400;font-size:10.5px}
+.pill{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:2px;white-space:nowrap}
+.p-un{background:var(--risk-soft);color:var(--risk)}
+.p-no{background:var(--signal-soft);color:var(--signal)}
+.p-new{background:var(--watch-soft);color:var(--watch)}
+.p-rev{background:var(--paper);color:var(--slate)}
+.p-cl{background:var(--good-soft);color:var(--good)}
+.mb{display:flex;align-items:center;gap:7px;justify-content:flex-end}
+.mb .bar{width:52px;height:5px;background:var(--paper);border-radius:3px;overflow:hidden;flex:0 0 auto}
+.mb .bar span{display:block;height:100%;background:var(--signal);border-radius:3px}
+.mb .bar span.good{background:var(--good)} .mb .bar span.risk{background:var(--risk)}
+.dots{display:flex;gap:2.5px;justify-content:flex-end}
+.dots i{width:7px;height:7px;border-radius:1px;background:var(--rule);display:block}
+.dots i.on{background:var(--signal)}
+.dots i.fw{background:var(--risk)}
+
+/* ---------- footnote ---------- */
+.notes{margin-top:34px;padding:18px 20px;background:var(--surface);border:1px solid var(--rule);
+  border-left:3px solid var(--signal);border-radius:var(--r)}
+.notes h3{margin:0 0 9px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--signal)}
+.notes ul{margin:0;padding-left:17px;color:var(--slate);font-size:12.5px}
+.notes li{margin-bottom:5px}
+.notes li b{color:var(--ink);font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:12px;font-size:11.5px;color:var(--slate);
+  padding-top:12px;border-top:1px solid var(--rule)}
+.legend span{display:flex;align-items:center;gap:6px}
+
+
+/* ---------- ROI split + trend ---------- */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.split>div{min-width:0;border-right:1px solid var(--rule)}
+.split>div:last-child{border-right:none}
+.split table{min-width:0}
+.sub-h{padding:14px 14px 11px;border-bottom:1px solid var(--rule);font-size:12.5px;font-weight:600}
+.sub-h small{display:block;margin-top:3px;color:var(--faint);font-size:10.5px;font-weight:400;line-height:1.35}
+.stack{display:flex;height:6px;border-radius:2px;overflow:hidden;width:64px;background:var(--paper)}
+.stack i{display:block;height:100%}
+.stack i.b{background:var(--signal)} .stack i.a{background:#7FA8D4}
+#trend-chart svg{display:block;width:100%;height:auto;overflow:visible}
+.lg{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;font-size:11px;color:var(--slate)}
+.lg span{display:flex;align-items:center;gap:5px}
+.lg i{width:11px;height:3px;border-radius:2px;display:block}
+.lg i.sq{width:9px;height:9px;border-radius:1px}
+@media (max-width:860px){.split{grid-template-columns:1fr}.split>div{border-right:none;border-bottom:1px solid var(--rule)}
+}
+@media (max-width:1080px){
+  .kpis{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:640px){
+  .shell{padding:20px 14px 56px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .gauges{grid-template-columns:1fr}
+  .masthead h1{font-size:23px}
+  .rung{grid-template-columns:24px 1fr 70px;gap:10px}
+  .rung .track{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .kpi{opacity:1;transform:none}
+}
+</style>
+
+<div class="shell">
+
+  <div class="masthead">
+    <div>
+      <div class="eyebrow">Enforcement Scorecard</div>
+      <h1>Brand Protection Performance</h1>
+      <p class="sub">Value, coverage and responsiveness for one account, then broken down by reseller and by product.</p>
+    </div>
+    <div class="badge"><i></i>Framework · illustrative values</div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl"><label for="acct">Account</label>
+      <select id="acct"></select></div>
+    <div class="ctl"><label for="mkt">Marketplace</label>
+      <select id="mkt"><option>All marketplaces</option><option>Amazon</option><option>Walmart</option></select></div>
+    <div class="ctl"><label for="rgn">Region</label>
+      <select id="rgn"><option>All regions</option><option>US</option><option>CA</option><option>UK</option><option>DE</option></select></div>
+    <div class="ctl"><label for="per">Period</label>
+      <select id="per"><option>July 2026</option><option>June 2026</option><option>Q2 2026</option><option>Year to date</option></select></div>
+  </div>
+
+  <div class="sect">
+    <div class="eyebrow">Overall</div>
+    <h2>Headline result</h2>
+    <p>Return and exposure first, then the operational volumes behind them. A blue dot marks a figure sourced from the ROI model or weekly review rather than the enforcement export.</p>
+  </div>
+  <div class="kpis" id="kpis"></div>
+
+  <div class="sect">
+    <div class="eyebrow">Signature view</div>
+    <h2>Notice escalation ladder</h2>
+    <p>How far up the escalation sequence resellers have actually been taken. The order matters here — each rung is a real step, and the narrowing shows where enforcement stops.</p>
+  </div>
+  <div class="ladder" id="ladder"></div>
+
+  <div class="sect">
+    <div class="eyebrow">Coverage and data quality</div>
+    <h2>Can we trust the numbers above?</h2>
+    <p>Coverage tells you what share of the identified problem is actually being worked, and how much of it is still live.</p>
+  </div>
+  <div class="gauges" id="gauges"></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true"  data-p="p-res">By reseller</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="p-prd">By product</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="p-roi">ROI attribution</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="p-trd">Trend &amp; correlation</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="p-kpi">KPI definitions</button>
+  </div>
+
+  <div class="panel on" id="p-res"><div class="tw"><table id="t-res"></table></div></div>
+  <div class="panel"    id="p-prd"><div class="tw"><table id="t-prd"></table></div></div>
+  <div class="panel"    id="p-roi">
+    <div class="tw" style="border-bottom:none;border-radius:0">
+      <div class="split">
+        <div><div class="sub-h">By reseller<small>buy box credit attributed directly · ASP credit split across resellers named on each event</small></div>
+          <table id="t-roiR"></table></div>
+        <div><div class="sub-h">By product<small>both credit types available at product grain · no allocation assumption</small></div>
+          <table id="t-roiP"></table></div>
+      </div>
+    </div>
+  </div>
+  <div class="panel"    id="p-trd">
+    <div class="tw" style="padding:20px 22px">
+      <div id="trend-chart"></div>
+    </div>
+  </div>
+  <div class="panel"    id="p-kpi"><div class="tw"><table id="t-kpi"></table></div></div>
+
+  <div class="notes">
+    <h3>How to read this</h3>
+    <ul id="notes"></ul>
+    <div class="legend">
+      <span><span class="src-dot model"></span> ROI model or weekly review</span>
+      <span><span class="src-dot"></span> Enforcement export</span>
+      <span><span class="dots"><i class="on"></i><i class="on"></i><i></i><i></i></span> Ladder rungs reached</span>
+      <span><span class="dots"><i class="fw"></i></span> Final warning issued</span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   Account-level figures. Reseller counts, noticed counts, active and
+   unauthorised counts are the real shape of the portfolio export
+   (74 clients, 20,817 resellers). ROI, lost sales, buy box, product
+   and reseller detail are illustrative and marked as such.
+------------------------------------------------------------------- */
+const ACCOUNTS = [
+  {id:"kenvue", name:"Kenvue",           resellers:1068, noticed:589, active:728, unauth:731, roi:284600, roiPrev:262100, fee:26984, lost:688298, lostPrev:741200, bbx:76.8, bbxPrev:74.1, listings:1394, closed:1048, bv:122, bvPrev:96, inv:143500},
+  {id:"loreal", name:"L'Oréal Paris US", resellers:979,  noticed:762, active:525, unauth:543, roi:412300, roiPrev:388400, fee:31500, lost:914500, lostPrev:1002300, bbx:81.2, bbxPrev:79.6, listings:2106, closed:1712, bv:87,  bvPrev:94, inv:221400},
+  {id:"bkf",    name:"Bar Keepers Friend",resellers:932, noticed:652, active:237, unauth:263, roi:96400,  roiPrev:88100, fee:12400, lost:214600, lostPrev:238900, bbx:88.4, bbxPrev:85.2, listings:768,  closed:637, bv:104, bvPrev:71, inv:64200},
+  {id:"haleon", name:"Haleon",           resellers:853,  noticed:653, active:359, unauth:581, roi:531200, roiPrev:498700, fee:38200, lost:1204800,lostPrev:1288400,bbx:79.3, bbxPrev:77.8, listings:2418, closed:2152, bv:143, bvPrev:118, inv:318700},
+  {id:"dell",   name:"Dell US",          resellers:824,  noticed:690, active:343, unauth:431, roi:648900, roiPrev:601200, fee:44600, lost:1518200,lostPrev:1611700,bbx:72.6, bbxPrev:70.1, listings:1982, closed:1604, bv:62,  bvPrev:58, inv:402100},
+  {id:"gp",     name:"Georgia Pacific",  resellers:792,  noticed:192, active:603, unauth:0,   roi:41200,  roiPrev:39800, fee:18900, lost:486300, lostPrev:451700, bbx:64.1, bbxPrev:66.9, listings:412,  closed:198,  bv:9,   bvPrev:11, inv:22600}
+];
+
+/* Ladder shape is the real portfolio ratio from the enforcement export:
+   Notice 1 = 9,147 · Notice 2 = 7,453 · Notice 3 = 6,553 · Final warning = 9,439
+   against 15,274 resellers noticed. Expressed as a share of noticed resellers.
+   Note the anomaly: final warnings outnumber first notices, so the ladder is
+   not being walked in sequence. Surfaced in the notes below. */
+const LADDER_SHAPE = [0.599, 0.488, 0.429, 0.618];
+const LADDER_META = [
+  {n:"1", nm:"Notice 1",      d:"First contact"},
+  {n:"2", nm:"Notice 2",      d:"Follow-up"},
+  {n:"3", nm:"Notice 3",      d:"Escalation"},
+  {n:"FW",nm:"Final warning", d:"Last step before referral"}
+];
+
+const RESELLERS = [
+  ["Northline Supply Co","A2IK3QJE2QXWDS","Amazon","Unauthorized",42,42,4,4,"Invoice Received",0,7,41200],
+  ["Vantage Retail Group","A1Y8OJBEX4AQXM","Amazon","Unauthorized",38,31,3,3,"Removal Promised",18400,5,33800],
+  ["Blue Harbor Trading","A3KLM92BFTJCJK","Walmart","Notified",34,34,4,4,"Invoice Received",0,4,29600],
+  ["Pinecrest Distributors","A2QW81MZPLQ4RT","Amazon","Unauthorized",29,18,2,2,"",31200,6,18400],
+  ["Marlowe & Sons","A9XZ04TTNBVCQE","Amazon","Notified",27,27,3,3,"Removal Promised",0,2,24100],
+  ["Kestrel Commerce","A5RT62JJKLMN08","Walmart","Review",24,11,1,1,"",27600,3,9700],
+  ["Fairview Wholesale","A7YU39PLKMNBVC","Amazon","Unauthorized",22,22,4,4,"Response Received",0,5,21300],
+  ["Oakridge Mercantile","A4TG81QWERTYUI","Amazon","New Seller",19,6,0,0,"",22900,1,3100],
+  ["Sable Trading LLC","A8HJ24ZXCVBNMQ","Walmart","Unauthorized",17,14,3,3,"",6800,4,14900],
+  ["Redstone Goods","A6FD73ASDFGHJK","Amazon","Notified",15,15,2,2,"Removal Promised",0,0,16800],
+  ["Cavendish Direct","A1SD48QAZWSXED","Amazon","Review",13,4,1,1,"",14300,2,5200],
+  ["Thornbury Retail","A3GH91RFVTGBYH","Walmart","New Seller",11,0,0,0,"",19700,1,1400],
+  ["Ashgrove Supply","A2JK57EDCRFVTG","Amazon","Unauthorized",9,9,4,4,"Invoice Received",0,3,12600],
+  ["Halden Distribution","A5LM63TGBNHYUJ","Amazon","New Seller",7,2,0,0,"",8100,0,2200],
+  ["Winterbourne Co","A7NB29YHNUJMIK","Walmart","Notified",6,6,2,2,"",0,1,7800]
+];
+
+const PRODUCTS = [
+  ["SKU-1041","Daily Multivitamin Gummies 120ct","Vitalis","VMS",214,181,38,79.4,24.99,26.49,47,88400,188400],
+  ["SKU-2103","Nicotine Lozenge Mint 4mg 81ct","Cessa","Smoking Cessation",186,142,44,71.2,41.99,44.99,62,104200,164200],
+  ["SKU-3210","Topical Pain Relief Gel 3.5oz","Reliev","Pain Relief",168,139,29,82.6,18.49,18.99,21,71600,121600],
+  ["SKU-1042","Effervescent Immune Powder 30ct","Vitalis","VMS",142,118,24,84.1,14.29,14.99,18,52300,96800],
+  ["SKU-2104","Nicotine Gum Ice Mint 160ct","Cessa","Smoking Cessation",134,96,31,68.9,52.99,56.99,44,83700,142300],
+  ["SKU-5330","Enamel Repair Toothpaste 4pk","Denta","Oral Care",118,104,14,88.3,21.99,21.49,9,38400,71400],
+  ["SKU-4102","Allergy Nasal Spray 120 dose","Clearway","Allergy",96,78,17,80.2,26.49,27.99,23,44100,58900],
+  ["SKU-6001","Antacid Chewable Tablets 90ct","Calmex","Digestive",84,71,11,86.7,12.99,12.49,7,26800,34200],
+  ["SKU-7220","Cold Sore Treatment Cream 2g","Abrev","Skin Care",72,58,13,79.8,32.49,34.99,16,34200,49700],
+  ["SKU-8801","Multipack bundle, contents unconfirmed","UNKNOWN","Other",96,42,22,58.4,0,0,0,41300,0],
+  ["SKU-8802","Unmatched listing, title only","UNKNOWN","Other",58,19,14,52.1,0,0,0,28900,0],
+  ["SKU-8803","Reseller-created variation","UNKNOWN","Other",26,0,9,44.6,0,0,0,15400,0]
+];
+
+
+/* ---------------------------------------------------------------------
+   Real output from the ROI model, four-week average basis, five months.
+   Reseller and product attribution each reconcile to the model's own
+   five-month total of $1,030,426.
+--------------------------------------------------------------------- */
+const ROI_TOTAL=1030426;
+const ROI_RES=[
+  ['ZTYCSEB',0,77406,1,0],
+  ['Supreme Suppliers',39246,1331,6,6],
+  ['Premium Supplies Limited',40450,0,1,1],
+  ['Dealogy Den LLC',28818,8540,5,2],
+  ['TMmarketplace',36705,0,1,1],
+  ['Hey Pharma',0,23693,112,0],
+  ['VIIANSA LLC',0,22189,45,0],
+  ['DealsByT',0,20719,2,0],
+  ['Exaglow',0,20716,1,0],
+  ['H&C Resale LLC',5666,12474,9,6],
+  ['Hopessf',0,17748,82,0],
+  ['Scarlett\u2019s Store',17465,32,1,1]
+];
+const ROI_PRD=[
+  ['B0012BNVE8',0,77406,0],
+  ['B0000537NI',45487,2136,2],
+  ['B004D2C57M',42163,739,2],
+  ['B00U2VQZDS',0,41433,0],
+  ['B001P92FMG',24416,7760,1],
+  ['B00006J3G2',17465,14354,2],
+  ['B08V8BL7WF',0,27641,0],
+  ['B01HOHBS6G',0,24460,0],
+  ['B09J1WTRFS',320,20225,1],
+  ['B08L88LZ4V',0,20511,0],
+  ['B0B3ZCG2NH',14477,4946,2],
+  ['B09ZM939Y4',8323,10526,1]
+];
+
+/* Monthly series for one account, Amazon US. Real values. */
+const TREND=[{"m": "2025-10", "bbx": 72.7, "lost": null, "closed": 1096, "notified": 19}, {"m": "2025-11", "bbx": 77.8, "lost": 50741, "closed": 1450, "notified": 46}, {"m": "2025-12", "bbx": 82.8, "lost": 30077, "closed": 414, "notified": 59}, {"m": "2026-01", "bbx": 81.5, "lost": 34136, "closed": 386, "notified": 45}, {"m": "2026-02", "bbx": 79.6, "lost": 60674, "closed": 255, "notified": 47}, {"m": "2026-03", "bbx": 80.6, "lost": 53014, "closed": 223, "notified": 7}, {"m": "2026-04", "bbx": 78.8, "lost": 49992, "closed": 494, "notified": 28}, {"m": "2026-05", "bbx": 78.7, "lost": 50030, "closed": 343, "notified": 15}];
+const KPI_DEFS = [
+  ["A1","Value","ROI $","Buy box credit plus ASP credit for the period.","ROI model"],
+  ["A2","Value","ROI multiple","ROI divided by the fee for the same period.","ROI model + contract"],
+  ["A5","Value","Lost sales $","Authorised revenue lost to unauthorised resellers.","Weekly review"],
+  ["A7","Value","Inventory removed $","Unauthorised inventory taken off the market.","Weekly review"],
+  ["B1","Buy box","Authorised buy box %","Listing-weighted share of buy box held by authorised sellers.","Buy box data"],
+  ["B6","Buy box","MAP violations","Offers priced below the minimum advertised price.","Listings grid"],
+  ["B7","Buy box","MAP breach rate %","MAP violations over offers where both price and MAP are present.","Listings grid"],
+  ["C1","Listings","Total listings","All unauthorised listings identified to date.","Listings grid"],
+  ["C4","Listings","Listings closed %","Closed listings over total listings.","Listings grid"],
+  ["D1","Resellers","Total resellers","Distinct resellers identified.","Enforcement export"],
+  ["D2","Resellers","Active resellers","Resellers still trading.","Enforcement export"],
+  ["D3","Resellers","Unauthorised resellers","Resellers confirmed unauthorised.","Enforcement export"],
+  ["E1","Notifications","Notices sent","Total notices across all four rungs of the ladder.","Enforcement export"],
+  ["E3","Notifications","Notice coverage %","Resellers noticed over resellers identified.","Enforcement export"],
+  ["E4","Notifications","Ladder depth","How many rungs each reseller has been taken through, nought to four.","Enforcement export"],
+  ["E6","Notifications","Notice delivery rate %","Notices confirmed delivered over notices sent.","Enforcement export"],
+  ["E8","Notifications","Response rate %","Noticed resellers that responded in any form.","Enforcement export"],
+  ["E11","Notifications","Notices per reseller","Average escalation effort per noticed reseller.","Enforcement export"],
+  ["F1","Brand violations","Brand violations","Violations identified in the period.","Violation tracker"],
+  ["G1","Coverage","Brand attribution %","Listings with a real brand assigned rather than unknown.","Listings grid"],
+  ["G4","Coverage","MAP reference coverage %","Products with a MAP reference price loaded.","Listings grid"]
+];
+
+/* ---------------------------- helpers ---------------------------- */
+const $=s=>document.querySelector(s);
+const money=v=>v>=1e6?"$"+(v/1e6).toFixed(2)+"M":v>=1e3?"$"+Math.round(v/1e3)+"K":"$"+v;
+const num=v=>v.toLocaleString("en-US");
+const pct=v=>v.toFixed(1)+"%";
+function delta(cur,prev,goodIsUp=true){
+  if(!prev) return {cls:"flat",txt:"—"};
+  const d=(cur-prev)/prev*100;
+  const good=goodIsUp?d>=0:d<0;
+  return {cls:Math.abs(d)<0.5?"flat":(good?"up":"dn"),
+          txt:(d>=0?"+":"")+d.toFixed(1)+"%"};
+}
+function band(v,g,w){return v>=g?"good":v>=w?"watch":"risk";}
+
+/* ---------------------------- render ---------------------------- */
+function renderKpis(a){
+  const dRoi=delta(a.roi,a.roiPrev), dLost=delta(a.lost,a.lostPrev,false),
+        dBbx=delta(a.bbx,a.bbxPrev), dBv=delta(a.bv,a.bvPrev,false);
+  const notices=Math.round(a.noticed*LADDER_SHAPE.reduce((x,y)=>x+y,0));
+  const tiles=[
+    {l:"ROI",            m:1, v:money(a.roi),  f:`${(a.roi/a.fee).toFixed(1)}x on fee`, c:dRoi},
+    {l:"Lost sales",     m:1, v:money(a.lost), f:"exposure this period", c:dLost},
+    {l:"Authorised BBX", m:1, v:pct(a.bbx),    f:"listing-weighted", c:dBbx},
+    {l:"Notices sent",   m:0, v:num(notices),  f:`${num(a.noticed)} resellers noticed`, c:{cls:"flat",txt:"—"}},
+    {l:"Listings",       m:0, v:num(a.listings),f:`${pct(a.closed/a.listings*100)} closed`, c:{cls:"flat",txt:"—"}},
+    {l:"Brand violations",m:1,v:num(a.bv),     f:"identified in period", c:dBv}
+  ];
+  $("#kpis").innerHTML=tiles.map((t,i)=>`
+    <div class="kpi" style="animation-delay:${i*55}ms">
+      <div class="k-label"><span class="src-dot ${t.m?"model":""}"></span>${t.l}</div>
+      <div class="k-val">${t.v}</div>
+      <div class="k-foot"><span class="chip ${t.c.cls}">${t.c.txt}</span><span>${t.f}</span></div>
+    </div>`).join("");
+}
+
+function renderLadder(a){
+  const counts=LADDER_SHAPE.map(s=>Math.round(a.noticed*s));
+  const max=Math.max.apply(null,counts);
+  const notices=counts.reduce((x,y)=>x+y,0);
+  const cov=a.noticed/a.resellers*100;
+  const deliv=71.1, resp=9.7;
+  $("#ladder").innerHTML=
+    LADDER_META.map((m,i)=>`
+      <div class="rung">
+        <div class="n">${m.n}</div>
+        <div class="nm">${m.nm}<small>${m.d}</small></div>
+        <div class="track"><div class="fill" data-w="${counts[i]/max*100}"></div></div>
+        <div class="amt">${num(counts[i])}<small>${(counts[i]/a.noticed*100).toFixed(0)}% of noticed</small></div>
+      </div>`).join("")
+    +`<div class="ladder-foot">
+        <div class="lf"><div class="t">Notices sent</div><div class="v">${num(notices)}</div></div>
+        <div class="lf"><div class="t">Resellers noticed</div><div class="v">${num(a.noticed)} of ${num(a.resellers)}</div></div>
+        <div class="lf"><div class="t">Notice coverage</div><div class="v ${band(cov,70,50)}">${pct(cov)}</div></div>
+        <div class="lf"><div class="t">Notices per reseller</div><div class="v">${(notices/a.noticed).toFixed(2)}</div></div>
+        <div class="lf"><div class="t">Delivered</div><div class="v ${band(deliv,85,70)}">${pct(deliv)}</div></div>
+        <div class="lf"><div class="t">Responded</div><div class="v ${band(resp,25,10)}">${pct(resp)}</div></div>
+      </div>`;
+  requestAnimationFrame(()=>document.querySelectorAll("#ladder .fill")
+    .forEach(f=>f.style.width=f.dataset.w+"%"));
+}
+
+function renderGauges(a){
+  const cov=a.noticed/a.resellers*100, cls=a.closed/a.listings*100;
+  const g=[
+    {n:"Notice coverage", v:cov, note:`${num(a.resellers-a.noticed)} identified resellers never noticed`, g:70,w:50},
+    {n:"Listings closed", v:cls, note:`${num(a.listings-a.closed)} still live`, g:80,w:60}
+  ];
+  $("#gauges").innerHTML=g.map(x=>`
+    <div class="gauge g-${band(x.v,x.g,x.w)}">
+      <div class="g-top"><span class="g-name">${x.n}</span><span class="g-val">${pct(x.v)}</span></div>
+      <div class="g-bar"><span data-w="${x.v}"></span></div>
+      <div class="g-note">${x.note}</div>
+    </div>`).join("");
+  requestAnimationFrame(()=>document.querySelectorAll("#gauges .g-bar span")
+    .forEach(s=>s.style.width=Math.min(100,s.dataset.w)+"%"));
+}
+
+const PILL={Unauthorized:"p-un",Notified:"p-no","New Seller":"p-new",Review:"p-rev",Authorized:"p-cl"};
+function dots(d){
+  let h="";for(let i=0;i<4;i++)h+=`<i class="${i<d?(i===3?"fw":"on"):""}"></i>`;
+  return `<div class="dots">${h}</div>`;
+}
+
+function renderResellers(){
+  /* row: 0 name 1 id 2 marketplace 3 status 4 listings 5 closed
+          6 notices 7 depth 8 response 9 bbShare 10 mapViol */
+  const cols=[["Reseller","name"],["Marketplace","name"],["Status","name"],["Listings","num"],
+              ["Closed %","num"],["Notices","num"],["Ladder","num"],["Response","name"],
+              ["Active lost sales","num"],["MAP viol.","num"],["ROI $","num"]];
+  const rows=RESELLERS.map(r=>{
+    const closedPct=r[4]?r[5]/r[4]*100:0;
+    return {sort:[r[0],r[2],r[3],r[4],closedPct,r[6],r[7],r[8],r[9],r[10],r[11]], html:`
+      <td class="name">${r[0]}<small>${r[1]}</small></td>
+      <td>${r[2]}</td>
+      <td><span class="pill ${PILL[r[3]]||"p-rev"}">${r[3]}</span></td>
+      <td class="num">${num(r[4])}</td>
+      <td class="num"><div class="mb"><div class="bar"><span class="${closedPct>=80?"good":closedPct<50?"risk":""}" style="width:${closedPct}%"></span></div>${closedPct.toFixed(0)}%</div></td>
+      <td class="num">${r[6]}</td>
+      <td class="num">${dots(r[7])}</td>
+      <td>${r[8]?`<span class="pill p-cl">${r[8]}</span>`:'<span style="color:#8C99A8">—</span>'}</td>
+      <td class="num">${r[9]?money(r[9]):'<span style="color:#8C99A8">\u2014</span>'}</td>
+      <td class="num">${r[10]}</td>
+      <td class="num">${money(r[11])}</td>`};
+  });
+  buildTable("#t-res",cols,rows,[3,4,5,6,8,9,10]);
+}
+
+function renderProducts(){
+  /* row: 0 code 1 name 2 brand 3 category 4 listings 5 closed
+          6 bbWins 7 authBbx 8 price 9 map 10 mapViol 11 lostSales */
+  const cols=[["Product","name"],["Brand","name"],["Category","name"],["Listings","num"],
+              ["Closed %","num"],["BB wins","num"],["Auth BBX %","num"],["Price","num"],
+              ["MAP","num"],["vs MAP","num"],["MAP viol.","num"],["Lost sales","num"],["ROI $","num"]];
+  const rows=PRODUCTS.map(p=>{
+    const closedPct=p[4]?p[5]/p[4]*100:0;
+    const gap=(p[8]&&p[9])?(p[8]-p[9])/p[9]*100:null;
+    return {sort:[p[1],p[2],p[3],p[4],closedPct,p[6],p[7],p[8],p[9],gap??0,p[10],p[11],p[12]], html:`
+      <td class="name">${p[1]}<small>${p[0]}</small></td>
+      <td>${p[2]==="UNKNOWN"?'<span class="pill p-new">Unattributed</span>':p[2]}</td>
+      <td>${p[3]}</td>
+      <td class="num">${num(p[4])}</td>
+      <td class="num"><div class="mb"><div class="bar"><span class="${closedPct>=80?"good":closedPct<60?"risk":""}" style="width:${closedPct}%"></span></div>${closedPct.toFixed(0)}%</div></td>
+      <td class="num">${p[6]}</td>
+      <td class="num">${p[7].toFixed(1)}%</td>
+      <td class="num">${p[8]?"$"+p[8].toFixed(2):"—"}</td>
+      <td class="num">${p[9]?"$"+p[9].toFixed(2):'<span style="color:#A66A05">not loaded</span>'}</td>
+      <td class="num">${gap===null?"—":`<span style="color:${gap<0?"#A82A19":"#0D6E4A"}">${gap>0?"+":""}${gap.toFixed(1)}%</span>`}</td>
+      <td class="num">${p[10]||"—"}</td>
+      <td class="num">${money(p[11])}</td>
+      <td class="num">${p[12]?money(p[12]):'<span style="color:#8C99A8">—</span>'}</td>`};
+  });
+  buildTable("#t-prd",cols,rows,[3,4,5,6,7,8,9,10,11,12]);
+}
+
+function renderKpiDefs(){
+  const cols=[["ID","name"],["Family","name"],["KPI","name"],["Definition","name"],["Source","name"]];
+  const rows=KPI_DEFS.map(k=>({sort:k,html:`
+    <td class="num" style="text-align:left;color:#17509B">${k[0]}</td>
+    <td>${k[1]}</td><td class="name" style="max-width:none">${k[2]}</td>
+    <td style="color:#5D6B7C">${k[3]}</td><td style="color:#5D6B7C">${k[4]}</td>`}));
+  buildTable("#t-kpi",cols,rows,[]);
+}
+
+
+function renderRoi(){
+  const maxR=Math.max.apply(null,ROI_RES.map(r=>r[1]+r[2]));
+  const rowsR=ROI_RES.map((r,i)=>{
+    const t=r[1]+r[2];
+    return {sort:[i+1,r[0],t,t/ROI_TOTAL],html:`
+      <td class="num" style="text-align:left;color:#8C99A8">${i+1}</td>
+      <td class="name">${r[0]}<small>${r[3]} product${r[3]===1?"":"s"} · ${r[4]} closure${r[4]===1?"":"s"}</small></td>
+      <td class="num">
+        <div class="mb"><div class="stack" title="buy box vs ASP credit">
+          <i class="b" style="width:${t?r[1]/t*100:0}%"></i><i class="a" style="width:${t?r[2]/t*100:0}%"></i>
+        </div>${money(t)}</div></td>
+      <td class="num">${(t/ROI_TOTAL*100).toFixed(1)}%</td>`};
+  });
+  buildTable("#t-roiR",[["#","num"],["Reseller","name"],["ROI $","num"],["Share","num"]],rowsR,[0,2,3]);
+
+  const rowsP=ROI_PRD.map((p,i)=>{
+    const t=p[1]+p[2];
+    return {sort:[i+1,p[0],t,t/ROI_TOTAL],html:`
+      <td class="num" style="text-align:left;color:#8C99A8">${i+1}</td>
+      <td class="name">${p[0]}<small>${p[3]?p[3]+" reseller"+(p[3]===1?"":"s")+" closed":"price recovery only"}</small></td>
+      <td class="num">
+        <div class="mb"><div class="stack" title="buy box vs ASP credit">
+          <i class="b" style="width:${t?p[1]/t*100:0}%"></i><i class="a" style="width:${t?p[2]/t*100:0}%"></i>
+        </div>${money(t)}</div></td>
+      <td class="num">${(t/ROI_TOTAL*100).toFixed(1)}%</td>`};
+  });
+  buildTable("#t-roiP",[["#","num"],["Product","name"],["ROI $","num"],["Share","num"]],rowsP,[0,2,3]);
+}
+
+function renderTrend(){
+  const W=900,H=430, L=54,Rp=62, T1=26,B1=196, T2=248,B2=352;
+  const d=TREND, n=d.length;
+  const xs=i=>L+(W-L-Rp)*(n===1?0.5:i/(n-1));
+  const bw=Math.max(8,(W-L-Rp)/n*0.3);
+
+  const bx=d.map(r=>r.bbx).filter(v=>v!==null);
+  const bmin=Math.floor(Math.min.apply(null,bx)-2), bmax=Math.ceil(Math.max.apply(null,bx)+2);
+  const yB=v=>B1-(v-bmin)/(bmax-bmin)*(B1-T1);
+  const lv=d.map(r=>r.lost).filter(v=>v!==null);
+  const lmax=Math.max.apply(null,lv)*1.15;
+  const yL=v=>B1-v/lmax*(B1-T1);
+  const cmax=Math.max.apply(null,d.map(r=>Math.max(r.closed,r.notified)))*1.12;
+  const yC=v=>B2-v/cmax*(B2-T2);
+
+  const path=(key,fy)=>{
+    let p="",started=false;
+    d.forEach((r,i)=>{ const v=r[key]; if(v===null) return;
+      p+=(started?" L":"M")+xs(i)+" "+fy(v).toFixed(1); started=true; });
+    return p;
+  };
+  const dots=(key,fy,cls)=>d.map((r,i)=>r[key]===null?"":
+    `<circle class="${cls}" cx="${xs(i)}" cy="${fy(r[key]).toFixed(1)}" r="3"/>`).join("");
+
+  const grid=[0,.25,.5,.75,1].map(t=>{
+    const y=T1+(B1-T1)*t, v=bmax-(bmax-bmin)*t;
+    return `<line x1="${L}" y1="${y}" x2="${W-Rp}" y2="${y}" class="gl"/>
+            <text x="${L-8}" y="${y+3.5}" class="ax ar">${v.toFixed(0)}%</text>`;
+  }).join("");
+  const gridR=[0,.5,1].map(t=>{
+    const y=T1+(B1-T1)*t, v=lmax-lmax*t;
+    return `<text x="${W-Rp+8}" y="${y+3.5}" class="ax">$${Math.round(v/1000)}K</text>`;
+  }).join("");
+
+  const bars=d.map((r,i)=>`
+    <rect x="${xs(i)-bw-1}" y="${yC(r.closed)}" width="${bw}" height="${B2-yC(r.closed)}" class="bc"/>
+    <rect x="${xs(i)+1}"    y="${yC(r.notified)}" width="${bw}" height="${B2-yC(r.notified)}" class="bn"/>`).join("");
+
+  const labels=d.map((r,i)=>`<text x="${xs(i)}" y="${B2+16}" class="ax am">${r.m.slice(5)}/${r.m.slice(2,4)}</text>`).join("");
+
+  document.querySelector("#trend-chart").innerHTML=`
+  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Buy box percentage and lost sales against listings closed and resellers notified, by month">
+    <style>
+      .gl{stroke:#DCE3EB;stroke-width:1}
+      .ax{font:10px "IBM Plex Mono",monospace;fill:#8C99A8}
+      .ar{text-anchor:end} .am{text-anchor:middle}
+      .lb{fill:none;stroke:#17509B;stroke-width:2.2;stroke-linejoin:round}
+      .ll{fill:none;stroke:#A82A19;stroke-width:2.2;stroke-dasharray:5 3;stroke-linejoin:round}
+      .db{fill:#17509B} .dl{fill:#A82A19}
+      .bc{fill:#17509B;opacity:.72} .bn{fill:#0D6E4A;opacity:.72}
+      .ttl{font:600 10.5px "IBM Plex Sans",sans-serif;fill:#5D6B7C;letter-spacing:.09em;text-transform:uppercase}
+      .zl{stroke:#10161F;stroke-width:1}
+    </style>
+    ${grid}${gridR}
+    <text x="${L}" y="${T1-10}" class="ttl">Authorised buy box % (solid) · lost sales $ (dashed)</text>
+    <path class="lb" d="${path('bbx',yB)}"/>
+    <path class="ll" d="${path('lost',yL)}"/>
+    ${dots('bbx',yB,'db')}${dots('lost',yL,'dl')}
+    <line x1="${L}" y1="${B1}" x2="${W-Rp}" y2="${B1}" class="zl"/>
+    <text x="${L}" y="${T2-10}" class="ttl">Listings closed (blue) · resellers notified (green)</text>
+    ${bars}
+    <line x1="${L}" y1="${B2}" x2="${W-Rp}" y2="${B2}" class="zl"/>
+    ${labels}
+  </svg>
+  <div class="lg">
+    <span><i style="background:#17509B"></i> Authorised buy box %</span>
+    <span><i style="background:#A82A19"></i> Lost sales $</span>
+    <span><i class="sq" style="background:#17509B"></i> Listings closed</span>
+    <span><i class="sq" style="background:#0D6E4A"></i> Resellers notified</span>
+  </div>`;
+
+}
+
+function buildTable(sel,cols,rows,numIdx){
+  const t=$(sel);
+  t.innerHTML=`<thead><tr>${cols.map((c,i)=>
+    `<th class="${numIdx.includes(i)?"num":""}" data-i="${i}">${c[0]}<span class="ar">▾</span></th>`).join("")}</tr></thead>
+    <tbody>${rows.map(r=>`<tr>${r.html}</tr>`).join("")}</tbody>`;
+  t.querySelectorAll("th").forEach(th=>{
+    th.onclick=()=>{
+      const i=+th.dataset.i;
+      const asc=th.getAttribute("data-dir")!=="asc";
+      t.querySelectorAll("th").forEach(o=>o.removeAttribute("data-dir"));
+      th.setAttribute("data-dir",asc?"asc":"desc");
+      th.querySelector(".ar").textContent=asc?"▴":"▾";
+      const sorted=[...rows].sort((a,b)=>{
+        const x=a.sort[i],y=b.sort[i];
+        return (typeof x==="number"&&typeof y==="number")
+          ? (asc?x-y:y-x)
+          : (asc?String(x).localeCompare(String(y)):String(y).localeCompare(String(x)));
+      });
+      t.querySelector("tbody").innerHTML=sorted.map(r=>`<tr>${r.html}</tr>`).join("");
+    };
+  });
+}
+
+function renderNotes(a){
+  const cov=a.noticed/a.resellers*100;
+  const items=[
+    `<b>The ladder is not being walked in sequence.</b> Across the portfolio export, final warnings (9,439) outnumber first notices (9,147). Either the stages are populated independently of each other or resellers are being escalated without a recorded first contact. This needs resolving before ladder depth can be reported to a client.`,
+    `<b>Notice coverage is ${pct(cov)}</b> for ${a.name} — ${num(a.resellers-a.noticed)} identified resellers have never received a notice. Across the portfolio export this figure ranges from 24% to 89% by account, which is the widest spread of any measure here.`,
+    `<b>Only 9.7% of noticed resellers respond in any form.</b> Of those that do, invoices received and removals promised are the two useful outcomes. The other 90% are silence.`,
+    `<b>27% of notices sit at "open"</b> rather than delivered or failed. Until that status is defined, the delivery rate of 71% is a floor rather than a measurement.`,
+    `<b>A third of listings carry no brand.</b> Unattributed rows are shown explicitly in the product view rather than dropped, so the gap stays visible instead of quietly shrinking the denominator.`,
+    `<b>Time to close is absent by design.</b> The field that should carry it is empty in every row of the reseller export. It is computable from the ROI model's notification history and belongs on this screen once wired in.`
+  ];
+  $("#notes").innerHTML=items.map(i=>`<li>${i}</li>`).join("");
+}
+
+function draw(){
+  const a=ACCOUNTS.find(x=>x.id===$("#acct").value)||ACCOUNTS[0];
+  renderKpis(a); renderLadder(a); renderGauges(a); renderNotes(a);
+}
+
+/* ---------------------------- init ---------------------------- */
+$("#acct").innerHTML=ACCOUNTS.map(a=>`<option value="${a.id}">${a.name}</option>`).join("");
+$("#acct").onchange=draw;
+document.querySelectorAll(".tab").forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll(".tab").forEach(o=>o.setAttribute("aria-selected","false"));
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("on"));
+    t.setAttribute("aria-selected","true");
+    $("#"+t.dataset.p).classList.add("on");
+  };
+});
+renderResellers(); renderProducts(); renderRoi(); renderTrend(); renderKpiDefs(); draw();
+</script>
